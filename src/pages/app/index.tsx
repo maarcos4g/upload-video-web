@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { Storage } from "@/components/user-storage";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -31,9 +32,17 @@ interface File {
   createdAt: string
 }
 
+interface Storage {
+  usage: {
+    total: string
+    percentage: string
+  }
+}
+
 export function Home() {
 
   const [files, setFiles] = useState<File[]>([])
+  const [storage, setStorage] = useState<Storage>()
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -74,6 +83,11 @@ export function Home() {
         setTotal(response.data.total)
         setLoading(false)
       })
+
+    api.get('/usage')
+    .then(response => {
+      setStorage(response.data)
+    })
   }, [page, search])
 
   function setCurrentSearch(search: string) {
@@ -140,17 +154,21 @@ export function Home() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-3 items-center">
-        <h1 className="text-xl font-bold">Uploads</h1>
-        <div className="px-3 w-72 py-1.5 border border-dashed border-zinc-700 rounded-full flex items-center gap-3">
-          <Search className="size-4 text-zinc-500" />
-          <input
-            className="bg-transparent focus:ring-0 flex-1 outline-none border-0 p-0 text-sm"
-            placeholder="Buscar uploads..."
-            value={search}
-            onChange={onSearchInputChanged}
-          />
+      <div className="w-full flex items-center justify-between">
+        <div className="flex gap-3 items-center">
+          <h1 className="text-xl font-bold">Uploads</h1>
+          <div className="px-3 w-72 py-1.5 border border-dashed border-zinc-700 rounded-full flex items-center gap-3">
+            <Search className="size-4 text-zinc-500" />
+            <input
+              className="bg-transparent focus:ring-0 flex-1 outline-none border-0 p-0 text-sm"
+              placeholder="Buscar uploads..."
+              value={search}
+              onChange={onSearchInputChanged}
+            />
+          </div>
         </div>
+
+        {storage?.usage && <Storage usage={storage.usage} />}
       </div>
 
       {loading ? (<SkeletonTable />) :
